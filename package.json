@@ -1,0 +1,39 @@
+{
+  "name": "my-coffee-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "sam build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "test": "jest --config jest.config.cjs",
+    "sam:validate": "sam validate --lint",
+    "sam:local": "npm run build && sam local start-api"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danieluruena/my-coffee-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/danieluruena/my-coffee-backend/issues"
+  },
+  "homepage": "https://github.com/danieluruena/my-coffee-backend#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.4.0",
+    "eslint": "^10.9.1",
+    "esbuild": "^0.25.0",
+    "globals": "^17.11.0",
+    "jest": "^30.4.2",
+    "jiti": "^2.7.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.68.0"
+  }
+}
