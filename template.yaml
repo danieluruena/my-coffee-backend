@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Mi Cafecito backend foundation
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Architectures:
+      - arm64
+
+Resources:
+  CoffeeApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/functions/health/index.ts
+        Minify: false
+        Sourcemap: true
+        Target: es2022
+    Properties:
+      CodeUri: .
+      Handler: src/functions/health/index.handler
+      Runtime: nodejs24.x
+      Events:
+        Health:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CoffeeApi
+            Path: /health
+            Method: GET
+            PayloadFormatVersion: "2.0"
+
+Outputs:
+  HealthApiUrl:
+    Description: URL of the health endpoint
+    Value: !Sub https://${CoffeeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/health

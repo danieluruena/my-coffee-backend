@@ -82,6 +82,8 @@ out
 .nuxt
 dist
 .output
+.build
+.test-build
 
 # Gatsby files
 .cache/
@@ -141,3 +143,5 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+.aws-sam
