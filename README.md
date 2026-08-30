@@ -27,6 +27,15 @@ npm run build
 
 La compilación usa esbuild a través de AWS SAM. El typecheck se ejecuta por separado con `tsc --noEmit` y las pruebas usan Jest directamente sobre los archivos TypeScript.
 
+## CI
+
+El workflow de GitHub Actions se ejecuta automáticamente en cada Pull Request y valida lint, typecheck, tests, `sam validate` y `sam build`.
+
+Versiones fijadas para CI:
+
+- Node.js 24.20.0
+- AWS SAM CLI 1.165.0
+
 Para invocar la Lambda localmente después del build:
 
 ```bash
