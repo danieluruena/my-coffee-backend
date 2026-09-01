@@ -2,10 +2,9 @@ name: Backend CI
 
 on:
   pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
+    branches:
+      - main
+      - develop
 
 env:
   NODE_VERSION: 24.20.0
@@ -13,7 +12,7 @@ env:
 
 jobs:
   validate:
-    name: Validate backend
+    name: Validate and build
     runs-on: ubuntu-latest
 
     steps:
