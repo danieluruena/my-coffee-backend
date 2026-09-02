@@ -1,0 +1,51 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  NODE_VERSION: 24.20.0
+  SAM_CLI_VERSION: 1.165.0
+
+jobs:
+  validate:
+    name: Validate and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@v3
+        with:
+          version: ${{ env.SAM_CLI_VERSION }}
+          use-installer: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run typecheck
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Validate SAM template
+        run: npm run sam:validate
+
+      - name: Build SAM application
+        run: npm run build
