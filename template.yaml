@@ -2,18 +2,97 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Mi Cafecito backend foundation
 
+Parameters:
+  ProjectName:
+    Type: String
+    Default: mi-cafecito
+    Description: Base name used to identify project resources.
+    AllowedPattern: ^[a-z0-9-]+$
+    ConstraintDescription: Use lowercase letters, numbers, and hyphens only.
+  EnvironmentName:
+    Type: String
+    Default: dev
+    Description: Deployment environment name.
+    AllowedValues:
+      - local
+      - dev
+      - staging
+      - prod
+  ApiStageName:
+    Type: String
+    Default: $default
+    Description: HTTP API stage name.
+
+Conditions:
+  IsDefaultApiStage: !Equals [!Ref ApiStageName, $default]
+
 Globals:
   Function:
     Timeout: 10
     MemorySize: 256
     Architectures:
       - arm64
+    Environment:
+      Variables:
+        PROJECT_NAME: !Ref ProjectName
+        ENVIRONMENT_NAME: !Ref EnvironmentName
+        TABLE_NAME: !Ref CoffeeTable
+        PHOTOS_BUCKET_NAME: !Ref CoffeePhotosBucket
+    Tags:
+      Project: !Ref ProjectName
+      Environment: !Ref EnvironmentName
 
 Resources:
   CoffeeApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      StageName: $default
+      StageName: !Ref ApiStageName
+      Tags:
+        Project: !Ref ProjectName
+        Environment: !Ref EnvironmentName
+
+  CoffeeTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  CoffeePhotosBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref EnvironmentName
 
   HealthFunction:
     Type: AWS::Serverless::Function
@@ -39,6 +118,21 @@ Resources:
             PayloadFormatVersion: "2.0"
 
 Outputs:
+  ApiBaseUrl:
+    Description: Base URL of the HTTP API.
+    Value: !If
+      - IsDefaultApiStage
+      - !Sub https://${CoffeeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
+      - !Sub https://${CoffeeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${ApiStageName}
   HealthApiUrl:
     Description: URL of the health endpoint
-    Value: !Sub https://${CoffeeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/health
+    Value: !If
+      - IsDefaultApiStage
+      - !Sub https://${CoffeeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/health
+      - !Sub https://${CoffeeApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${ApiStageName}/health
+  CoffeeTableName:
+    Description: Name of the DynamoDB table used by the backend.
+    Value: !Ref CoffeeTable
+  CoffeePhotosBucketName:
+    Description: Name of the private S3 bucket used for coffee photos.
+    Value: !Ref CoffeePhotosBucket
