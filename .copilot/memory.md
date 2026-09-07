@@ -121,6 +121,76 @@ Requisitos:
 - protección de endpoints;
 - asociación automática del usuario autenticado con sus datos.
 
+### 3.1.1 Registro de un usuario nuevo
+
+El registro permitirá crear una cuenta mediante email/password o mediante Google. En ambos casos, Cognito será la fuente de identidad y el backend no confiará en un `userId` enviado por la aplicación.
+
+#### Registro con email y password
+
+1. El usuario selecciona **Crear cuenta** e introduce su email, contraseña y, opcionalmente, su nombre visible.
+2. La aplicación valida los datos localmente y solicita a Cognito el registro de la cuenta.
+3. Cognito crea el usuario en estado pendiente y envía un código de verificación al email.
+4. El usuario introduce el código recibido. La aplicación solicita a Cognito la confirmación de la cuenta.
+5. Una vez confirmado el email, el usuario inicia sesión y Cognito devuelve los tokens de la sesión.
+6. La aplicación almacena la sesión únicamente en almacenamiento seguro del dispositivo.
+
+#### Registro con Google
+
+1. El usuario selecciona **Continuar con Google**.
+2. Cognito inicia el flujo OAuth/OIDC y Google autentica al usuario.
+3. Cognito valida la respuesta del proveedor y crea la identidad si todavía no existe.
+4. Cognito devuelve los tokens a la aplicación mediante el flujo de autenticación configurado.
+
+#### Creación del perfil interno
+
+Después de obtener una sesión válida, la aplicación llama a `GET /me`. El backend obtiene el `sub` desde los claims del token y:
+
+- crea la entidad `User` si es el primer acceso;
+- guarda el email verificado, el nombre y el avatar disponibles;
+- establece `createdAt` y `updatedAt`;
+- devuelve el perfil al cliente.
+
+Este perfil se persistirá en la misma tabla de DynamoDB que los cafés, usando una clave estable y diferente:
+
+```text
+PK = USER#{sub}
+SK = SETTINGS#PROFILE
+```
+
+La inicialización ocurrirá preferentemente en el backend durante el primer request autenticado que requiera el perfil, no únicamente en la aplicación móvil. La escritura deberá ser idempotente y resistente a requests simultáneos: si el perfil ya existe, no se crea otro registro ni se sobrescribe destructivamente la información. Para ello se utilizará una escritura condicional o una estrategia equivalente.
+
+El cliente no podrá elegir ni enviar como autoridad el `userId`, `PK` o `SK`. El backend derivará siempre el identificador desde el `sub` validado por Cognito y solo persistirá claims permitidos como email, nombre y avatar. Nunca se almacenarán tokens, credenciales ni secretos de los proveedores.
+
+Desde ese momento, todas las operaciones de cafés quedan asociadas automáticamente al `sub` autenticado y compartirán la partición `USER#{sub}` con el perfil, pero mantendrán sus claves `COFFEE#...`.
+
+El flujo tendrá tests para creación, idempotencia, extracción del `sub`, persistencia de claims permitidos, rechazo de un `userId` enviado por el cliente, aislamiento entre usuarios y prevención de duplicados en condiciones de carrera. El entorno local deberá permitir probarlo con autenticación mock y DynamoDB Local.
+
+#### Casos especiales
+
+- Si el email ya está asociado a otra identidad, no se fusionarán cuentas automáticamente.
+- La vinculación de proveedores requerirá que el usuario haya iniciado sesión y confirmado explícitamente la acción.
+- Un email no verificado no podrá completar el acceso mediante email/password.
+- La aplicación mostrará errores de email duplicado, código expirado, contraseña inválida o cancelación del proveedor, y permitirá reintentar o solicitar un nuevo código cuando corresponda.
+- Si falla la creación o recuperación del perfil interno, no se permitirá acceder a las funcionalidades privadas hasta completar la sincronización.
+
+### 3.1.2 Eliminación de la cuenta
+
+La eliminación de la cuenta será una acción explícita desde el perfil, separada del cierre de sesión. Antes de ejecutarla, la aplicación mostrará una advertencia clara de que la operación es permanente y solicitará una confirmación adicional. Cuando corresponda, podrá requerirse una reautenticación reciente con Cognito.
+
+El flujo será el siguiente:
+
+1. El usuario solicita eliminar su cuenta y confirma la acción.
+2. La aplicación llama al backend con la sesión autenticada. No enviará `userId`, `PK` ni `SK` como autoridad.
+3. El backend valida el token, obtiene el `sub` y localiza todos los elementos de la partición `PK=USER#{sub}`.
+4. El backend recopila las referencias `photoKeys` de los cafés y elimina los objetos correspondientes del bucket S3 privado.
+5. El backend elimina los registros de cafés y el registro `SETTINGS#PROFILE` de DynamoDB, sin tocar datos de otros usuarios.
+6. Cuando la eliminación de los datos de la aplicación finaliza correctamente, el backend elimina la identidad del usuario en Cognito.
+7. La aplicación borra la sesión y los tokens del almacenamiento seguro y redirige al usuario a la pantalla de bienvenida.
+
+La operación deberá ser idempotente: repetir la solicitud después de una eliminación completada no debe recrear datos ni producir un error que impida al usuario abandonar la aplicación. Si el volumen de datos impide completar el proceso dentro del tiempo de una request, se utilizará un proceso asíncrono controlado, con estado de eliminación y reintentos seguros. La cuenta no se considerará eliminada para el usuario hasta que todos los datos gestionados por la aplicación hayan sido procesados.
+
+Si falla una etapa, el backend no debe borrar la identidad de Cognito dejando datos inaccesibles sin procesar. Debe registrar el estado técnico sin almacenar tokens ni secretos, permitir reanudar la limpieza y devolver un error genérico al cliente. Las operaciones de eliminación deben contar con tests para autorización, aislamiento entre usuarios, borrado del perfil y cafés, eliminación de fotografías, idempotencia y fallos parciales.
+
 ## 3.2 Registro de café
 
 ### Datos mínimos
