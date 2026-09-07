@@ -6,17 +6,13 @@ Parameters:
   ProjectName:
     Type: String
     Default: mi-cafecito
-    Description: Base name used to identify project resources.
-    AllowedPattern: ^[a-z0-9-]+$
-    ConstraintDescription: Use lowercase letters, numbers, and hyphens only.
-  EnvironmentName:
+  Env:
     Type: String
     Default: dev
     Description: Deployment environment name.
     AllowedValues:
       - local
       - dev
-      - staging
       - prod
   ApiStageName:
     Type: String
@@ -35,12 +31,12 @@ Globals:
     Environment:
       Variables:
         PROJECT_NAME: !Ref ProjectName
-        ENVIRONMENT_NAME: !Ref EnvironmentName
+        ENVIRONMENT_NAME: !Ref Env
         TABLE_NAME: !Ref CoffeeTable
         PHOTOS_BUCKET_NAME: !Ref CoffeePhotosBucket
     Tags:
       Project: !Ref ProjectName
-      Environment: !Ref EnvironmentName
+      Environment: !Ref Env
 
 Resources:
   CoffeeApi:
@@ -49,7 +45,7 @@ Resources:
       StageName: !Ref ApiStageName
       Tags:
         Project: !Ref ProjectName
-        Environment: !Ref EnvironmentName
+        Environment: !Ref Env
 
   CoffeeTable:
     Type: AWS::DynamoDB::Table
@@ -71,7 +67,7 @@ Resources:
         - Key: Project
           Value: !Ref ProjectName
         - Key: Environment
-          Value: !Ref EnvironmentName
+          Value: !Ref Env
 
   CoffeePhotosBucket:
     Type: AWS::S3::Bucket
@@ -85,14 +81,11 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
-      OwnershipControls:
-        Rules:
-          - ObjectOwnership: BucketOwnerEnforced
       Tags:
         - Key: Project
           Value: !Ref ProjectName
         - Key: Environment
-          Value: !Ref EnvironmentName
+          Value: !Ref Env
 
   HealthFunction:
     Type: AWS::Serverless::Function
