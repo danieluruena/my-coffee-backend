@@ -33,7 +33,7 @@ Globals:
         PROJECT_NAME: !Ref ProjectName
         ENVIRONMENT_NAME: !Ref Env
         TABLE_NAME: !Ref CoffeeTable
-        PHOTOS_BUCKET_NAME: !Ref CoffeePhotosBucket
+        BUCKET_NAME: !Ref CoffeeBucket
     Tags:
       Project: !Ref ProjectName
       Environment: !Ref Env
@@ -69,9 +69,10 @@ Resources:
         - Key: Environment
           Value: !Ref Env
 
-  CoffeePhotosBucket:
+  CoffeeBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: !Sub "my-coffee-${Env}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -126,6 +127,6 @@ Outputs:
   CoffeeTableName:
     Description: Name of the DynamoDB table used by the backend.
     Value: !Ref CoffeeTable
-  CoffeePhotosBucketName:
+  CoffeeBucketName:
     Description: Name of the private S3 bucket used for coffee photos.
-    Value: !Ref CoffeePhotosBucket
+    Value: !Ref CoffeeBucket
