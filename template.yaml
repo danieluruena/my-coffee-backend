@@ -42,7 +42,7 @@ Resources:
   CoffeeApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      Name: !Sub "my-coffee-${Env}"
+      Name: !Sub "${ProjectName}-${Env}"
       StageName: !Ref ApiStageName
       Tags:
         Project: !Ref ProjectName
@@ -51,7 +51,7 @@ Resources:
   CoffeeTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "my-coffee-${Env}"
+      TableName: !Sub "${ProjectName}-${Env}"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
@@ -74,7 +74,7 @@ Resources:
   CoffeeBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "my-coffee-${Env}"
+      BucketName: !Sub "${ProjectName}-${Env}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -101,7 +101,7 @@ Resources:
         Sourcemap: true
         Target: es2022
     Properties:
-      FunctionName: !Sub "my-coffee-health-${Env}"
+      FunctionName: !Sub "${ProjectName}-health-${Env}"
       CodeUri: .
       Handler: src/functions/health/index.handler
       Runtime: nodejs24.x
