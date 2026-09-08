@@ -1,10 +1,7 @@
-export interface HealthResponse {
-  statusCode: number
-  headers: Record<string, string>
-  body: string
-}
+import { HttpLambdaResponse } from '../../infrastructure/interfaces'
 
-export async function handler(): Promise<HealthResponse> {
+
+export const handler = async (): Promise<HttpLambdaResponse> => {
   return {
     statusCode: 200,
     headers: {
