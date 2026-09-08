@@ -2,7 +2,6 @@ import { createDynamoDbClient, createS3Client } from '../../../src/infrastructur
 
 describe('AWS clients', () => {
   const config = {
-    authMode: 'mock' as const,
     environment: 'local' as const,
     awsRegion: 'eu-west-1',
     tableName: 'table',

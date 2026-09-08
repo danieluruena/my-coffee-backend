@@ -6,7 +6,6 @@ describe('loadEnvironment', () => {
   beforeEach(() => {
     process.env = {
       ENVIRONMENT: 'local',
-      AUTH_MODE: 'mock',
       AWS_REGION: 'eu-west-1',
       TABLE_NAME: 'mi-cafecito-local',
       BUCKET_NAME: 'mi-cafecito-local',
@@ -22,7 +21,6 @@ describe('loadEnvironment', () => {
   test('loads local configuration and optional service endpoints', () => {
     expect(loadEnvironment()).toEqual({
       environment: 'local',
-      authMode: 'mock',
       awsRegion: 'eu-west-1',
       tableName: 'mi-cafecito-local',
       bucketName: 'mi-cafecito-local',
@@ -38,9 +36,4 @@ describe('loadEnvironment', () => {
     expect(() => loadEnvironment()).toThrow('Missing required environment variable: ENVIRONMENT')
   })
 
-  test('rejects an unsupported authentication mode', () => {
-    process.env.AUTH_MODE = 'invalid'
-
-    expect(() => loadEnvironment()).toThrow('Unsupported AUTH_MODE: invalid')
-  })
 })
