@@ -663,26 +663,39 @@ my-coffee-app/
 ```text
 my-coffee-backend/
 ├── src/
-│   ├── functions/
-│   │   ├── getCoffees/
-│   │   ├── createCoffee/
-│   │   ├── getCoffee/
-│   │   ├── updateCoffee/
-│   │   ├── deleteCoffee/
-│   │   ├── createUploadUrl/
-│   │   └── getStats/
-│   ├── domain/
-│   ├── application/
-│   ├── infrastructure/
-│   │   ├── dynamodb/
-│   │   └── s3/
+│   ├── auth/
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   └── functions/
+│   ├── user/
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   └── functions/
+│   ├── coffee/
+│   │   ├── application/
+│   │   ├── domain/
+│   │   ├── infrastructure/
+│   │   └── functions/
 │   └── shared/
+│       ├── config/
+│       ├── interfaces/
+│       └── utils/
 ├── tests/
+│   ├── auth/
+│   ├── user/
+│   ├── coffee/
+│   └── shared/
 ├── template.yaml
 ├── samconfig.toml
 ├── package.json
 └── tsconfig.json
 ```
+
+La organización del backend será modular por dominio o entidad de negocio. Cada módulo mantendrá sus propias capas de arquitectura hexagonal (`application`, `domain`, `infrastructure` y `functions`), evitando agrupar todo el código por capa técnica a nivel global. Por ejemplo, `coffee` será responsable del registro, consulta, edición, eliminación, fotografías y estadísticas relacionadas con cafés, mientras que `user` gestionará el perfil interno y `auth` la integración con la identidad autenticada.
+
+`shared` es la única carpeta transversal. Contendrá únicamente código reutilizable y sin una responsabilidad exclusiva de un dominio, como configuración, interfaces, utilidades y adaptadores comunes. No se utilizará para ocultar lógica de negocio ni para crear dependencias entre dominios; cada módulo deberá conservar la propiedad de sus reglas y casos de uso.
 
 ---
 
