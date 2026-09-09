@@ -113,14 +113,14 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - src/functions/health/index.ts
+          - src/shared/functions/health/index.ts
         Minify: false
         Sourcemap: true
         Target: es2022
     Properties:
       FunctionName: !Sub "${ProjectName}-health-${Env}"
       CodeUri: .
-      Handler: src/functions/health/index.handler
+      Handler: src/shared/functions/health/index.handler
       Runtime: nodejs24.x
       Events:
         Health:
@@ -137,14 +137,14 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - src/functions/authorizer/index.ts
+          - src/auth/functions/authorizer/index.ts
         Minify: false
         Sourcemap: true
         Target: es2022
     Properties:
       FunctionName: !Sub "${ProjectName}-authorizer-${Env}"
       CodeUri: .
-      Handler: src/functions/authorizer/index.handler
+      Handler: src/auth/functions/authorizer/index.handler
       Runtime: nodejs24.x
 
 Outputs:

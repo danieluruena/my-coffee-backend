@@ -22,26 +22,24 @@ El objetivo es mantener un código limpio, modular y fácil de desplegar en AWS 
 
 ## 📂 Organización del Proyecto (Arquitectura Limpia)
 
-El proyecto sigue una arquitectura limpia, separando responsabilidades en capas bien definidas:
+El proyecto sigue una arquitectura limpia organizada por dominios de negocio. Cada dominio mantiene sus propias capas hexagonales:
 
-- `src/application/`  
-  Contiene casos de uso y lógica de aplicación.  
-  Aquí se orquesta cómo interactúan los distintos componentes del dominio con la infraestructura.
+- `src/auth/`
+  Autenticación, authorizer, identidad y validación de tokens.
 
-- `src/domain/`  
-  Define las entidades, modelos y reglas de negocio puras.  
-  Esta capa no depende de frameworks ni de detalles técnicos.
+- `src/user/`
+  Perfil y datos internos del usuario.
 
-- `src/functions/`  
-  Handlers de AWS Lambda expuestos por SAM.  
-  Cada función actúa como punto de entrada, delegando la lógica a la capa de aplicación.
+- `src/coffee/`
+  Registro, consulta, edición, eliminación, fotografías y estadísticas de cafés.
 
-- `src/infrastructure/`  
-  Implementaciones concretas de servicios externos (bases de datos, colas, APIs, almacenamiento).  
-  Aquí se definen adaptadores y conectores que cumplen contratos definidos en el dominio.
+- Dentro de cada dominio, `application/` contiene casos de uso y puertos, `domain/` define entidades y reglas puras, `infrastructure/` contiene adaptadores concretos y `functions/` expone handlers de AWS Lambda.
+
+- `src/shared/`
+  Código transversal reutilizable, como configuración, interfaces, utilidades, adaptadores comunes y funciones técnicas como health. No debe contener reglas de negocio propias de un dominio.
 
 - `tests/`  
-  Pruebas unitarias y de integración, organizadas en paralelo a las capas anteriores.
+  Pruebas organizadas en paralelo a los dominios y sus capas.
 
 ---
 
