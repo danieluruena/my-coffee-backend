@@ -18,6 +18,12 @@ Parameters:
     Type: String
     Default: $default
     Description: HTTP API stage name.
+  CognitoUserPoolId:
+    Type: String
+    Default: ""
+  CognitoClientId:
+    Type: String
+    Default: ""
 
 Conditions:
   IsDefaultApiStage: !Equals [!Ref ApiStageName, $default]
@@ -31,9 +37,11 @@ Globals:
     Environment:
       Variables:
         PROJECT_NAME: !Ref ProjectName
-        ENVIRONMENT_NAME: !Ref Env
-        TABLE_NAME: !Ref CoffeeTable
-        BUCKET_NAME: !Ref CoffeeBucket
+        ENVIRONMENT: !Ref Env
+        TABLE_NAME: !Sub "${ProjectName}-${Env}"
+        BUCKET_NAME: !Sub "${ProjectName}-${Env}"
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+        COGNITO_CLIENT_ID: !Ref CognitoClientId
     Tags:
       Project: !Ref ProjectName
       Environment: !Ref Env
@@ -44,6 +52,15 @@ Resources:
     Properties:
       Name: !Sub "${ProjectName}-${Env}"
       StageName: !Ref ApiStageName
+      Auth:
+        Authorizers:
+          RequestAuthorizer:
+            AuthorizerPayloadFormatVersion: "2.0"
+            EnableSimpleResponses: true
+            FunctionArn: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-authorizer-${Env}"
+            Identity:
+              Headers:
+                - Authorization
       Tags:
         Project: !Ref ProjectName
         Environment: !Ref Env
@@ -113,6 +130,22 @@ Resources:
             Path: /health
             Method: GET
             PayloadFormatVersion: "2.0"
+
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/functions/authorizer/index.ts
+        Minify: false
+        Sourcemap: true
+        Target: es2022
+    Properties:
+      FunctionName: !Sub "${ProjectName}-authorizer-${Env}"
+      CodeUri: .
+      Handler: src/functions/authorizer/index.handler
+      Runtime: nodejs24.x
 
 Outputs:
   ApiBaseUrl:

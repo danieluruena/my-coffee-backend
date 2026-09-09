@@ -15,6 +15,8 @@ El objetivo es mantener un código limpio, modular y fácil de desplegar en AWS 
 - Evitar `any`; preferir **tipos explícitos** y **interfaces**.
 - Nombres de funciones y variables en **camelCase**.
 - Clases y tipos en **PascalCase**.
+- Nombre de archivos en **LowerPascalCase**.
+- Preferir arrow functions siempre que sea posible
 
 ---
 

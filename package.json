@@ -6,10 +6,14 @@
   "scripts": {
     "build": "sam build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src tests",
+    "lint": "eslint src tests scripts",
     "test": "jest --config jest.config.cjs",
     "sam:validate": "sam validate --lint",
-    "sam:local": "npm run build && sam local start-api"
+    "local:up": "docker compose up -d --wait",
+    "local:down": "docker compose down",
+    "local:setup": "tsx scripts/local/setup.ts",
+    "local:seed": "tsx scripts/local/seed.ts",
+    "sam:local": "npm run build && sam local start-api --env-vars .env.local.json --parameter-overrides Env=local"
   },
   "repository": {
     "type": "git",
@@ -27,13 +31,21 @@
     "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.4.0",
-    "eslint": "^10.9.1",
     "esbuild": "^0.25.0",
+    "eslint": "^10.9.1",
     "globals": "^17.11.0",
     "jest": "^30.4.2",
     "jiti": "^2.7.0",
     "ts-jest": "^29.4.5",
+    "tsx": "^4.23.13",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.68.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1127.0",
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/lib-dynamodb": "^3.1127.0",
+    "@aws-sdk/s3-request-presigner": "^3.1127.0",
+    "aws-jwt-verify": "^5.2.1"
   }
 }

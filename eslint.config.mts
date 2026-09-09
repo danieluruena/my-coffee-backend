@@ -18,6 +18,7 @@ export default defineConfig([
       'object-curly-spacing': ['error', 'always'],
       'array-bracket-spacing': ['error', 'never'],
       'key-spacing': ['error', { beforeColon: false, afterColon: true }],
+      'func-style': ['error', 'expression'],
     },
   },
 ])
