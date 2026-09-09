@@ -143,27 +143,59 @@ El registro permitirá crear una cuenta mediante email/password o mediante Googl
 
 #### Creación del perfil interno
 
-Después de obtener una sesión válida, la aplicación llama a `GET /me`. El backend obtiene el `sub` desde los claims del token y:
+Después de obtener una sesión válida, la aplicación debe llamar al endpoint:
 
-- crea la entidad `User` si es el primer acceso;
-- guarda el email verificado, el nombre y el avatar disponibles;
-- establece `createdAt` y `updatedAt`;
-- devuelve el perfil al cliente.
+```http
+POST /user/profile
+```
 
-Este perfil se persistirá en la misma tabla de DynamoDB que los cafés, usando una clave estable y diferente:
+El endpoint estará protegido mediante el authorizer de API Gateway configurado con Cognito. El backend obtiene el `sub` desde los claims del token autenticado y utiliza ese valor como única fuente confiable para identificar al usuario.
+
+La aplicación enviará en el body la información necesaria para crear el perfil:
+
+```json
+{
+  "email": "usuario@example.com",
+  "displayName": "Juan Pérez",
+  "avatarUrl": "https://example.com/avatar.jpg"
+}
+```
+
+`avatarUrl` es opcional. El cliente no podrá enviar ni utilizar como autoridad `userId`, `PK` o `SK`.
+
+El backend valida el body, obtiene el `sub`, crea la entidad `User` si es el primer registro, guarda el email, nombre y avatar disponibles, establece `createdAt` y `updatedAt`, persiste el perfil y devuelve los datos del nuevo usuario.
+
+Este perfil se persistirá en la misma tabla de DynamoDB que los cafés:
 
 ```text
 PK = USER#{sub}
 SK = SETTINGS#PROFILE
 ```
 
-La inicialización ocurrirá preferentemente en el backend durante el primer request autenticado que requiera el perfil, no únicamente en la aplicación móvil. La escritura deberá ser idempotente y resistente a requests simultáneos: si el perfil ya existe, no se crea otro registro ni se sobrescribe destructivamente la información. Para ello se utilizará una escritura condicional o una estrategia equivalente.
+La respuesta exitosa será `201 Created`:
 
-El cliente no podrá elegir ni enviar como autoridad el `userId`, `PK` o `SK`. El backend derivará siempre el identificador desde el `sub` validado por Cognito y solo persistirá claims permitidos como email, nombre y avatar. Nunca se almacenarán tokens, credenciales ni secretos de los proveedores.
+```json
+{
+  "user": {
+    "id": "a1b2c3d4",
+    "email": "usuario@example.com",
+    "displayName": "Juan Pérez",
+    "avatarUrl": "https://example.com/avatar.jpg",
+    "createdAt": "2026-09-09T03:00:00.000Z",
+    "updatedAt": "2026-09-09T03:00:00.000Z"
+  }
+}
+```
+
+Si el perfil ya existe, el endpoint responderá `409 Conflict` y no deberá sobrescribir destructivamente los datos existentes.
+
+La escritura deberá ser idempotente y resistente a requests simultáneos: no se deben crear registros duplicados ni permitir condiciones de carrera. Para ello se utilizará una escritura condicional o una estrategia equivalente.
+
+El cliente no podrá elegir ni enviar como autoridad el `userId`, `PK` o `SK`. El backend derivará siempre el identificador desde el `sub` validado por Cognito y nunca almacenará tokens, credenciales ni secretos de los proveedores.
 
 Desde ese momento, todas las operaciones de cafés quedan asociadas automáticamente al `sub` autenticado y compartirán la partición `USER#{sub}` con el perfil, pero mantendrán sus claves `COFFEE#...`.
 
-El flujo tendrá tests para creación, idempotencia, extracción del `sub`, persistencia de claims permitidos, rechazo de un `userId` enviado por el cliente, aislamiento entre usuarios y prevención de duplicados en condiciones de carrera. El entorno local deberá permitir probarlo con autenticación mock y DynamoDB Local.
+El flujo tendrá tests para creación, validación, extracción del `sub`, persistencia de los datos permitidos, rechazo de un `userId` enviado por el cliente, aislamiento entre usuarios, respuesta `409` cuando el perfil ya existe y prevención de duplicados en condiciones de carrera. El entorno local deberá permitir probarlo con autenticación mock y DynamoDB Local.
 
 #### Casos especiales
 
