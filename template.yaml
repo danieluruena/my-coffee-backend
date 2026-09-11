@@ -131,6 +131,36 @@ Resources:
             Method: GET
             PayloadFormatVersion: "2.0"
 
+  CreateUserProfileFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/user/functions/createUserProfile/index.ts
+        Minify: false
+        Sourcemap: true
+        Target: es2022
+    Properties:
+      FunctionName: !Sub "${ProjectName}-user-profile-${Env}"
+      CodeUri: .
+      Handler: src/user/functions/createUserProfile/index.handler
+      Runtime: nodejs24.x
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CoffeeTable
+      Events:
+        CreateUserProfile:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CoffeeApi
+            Path: /user/profile
+            Method: POST
+            PayloadFormatVersion: "2.0"
+            Auth:
+              Authorizer: RequestAuthorizer
+              AuthorizationType: CUSTOM
+
   AuthorizerFunction:
     Type: AWS::Serverless::Function
     Metadata:

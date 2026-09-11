@@ -1,0 +1,98 @@
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
+import { loadEnvironment } from '../../../shared/config/environment'
+import { createDynamoDbClient } from '../../../shared/infrastructure/aws/clients'
+import type { HttpLambdaResponse } from '../../../shared/interfaces'
+import { createUserProfile } from '../../application/createUserProfile'
+import type { CreateUserProfileRequest, UserProfileRepository } from '../../application/interfaces'
+import { DynamoDbUserProfileRepository } from '../../infrastructure/dynamoDbUserProfileRepository'
+
+export interface UserProfileHandlerEvent {
+  body?: string
+  requestContext?: {
+    authorizer?: {
+      lambda?: {
+        subject?: string
+        email?: string
+        name?: string
+      }
+    }
+  }
+}
+
+const buildRepository = (): UserProfileRepository => {
+  const config = loadEnvironment()
+  const client = DynamoDBDocumentClient.from(createDynamoDbClient(config))
+  return new DynamoDbUserProfileRepository(client, config.tableName)
+}
+
+const response = (statusCode: number, payload: Record<string, unknown>): HttpLambdaResponse => ({
+  statusCode,
+  headers: {
+    'content-type': 'application/json',
+  },
+  body: JSON.stringify(payload),
+})
+
+const isAuthenticated = (event: UserProfileHandlerEvent): string | undefined => {
+  return event.requestContext?.authorizer?.lambda?.subject?.trim() || undefined
+}
+
+export const handler = async (
+  event: UserProfileHandlerEvent,
+  repository: UserProfileRepository = buildRepository(),
+): Promise<HttpLambdaResponse> => {
+  const userId = isAuthenticated(event)
+
+  if (!userId) {
+    return response(401, { message: 'Unauthorized' })
+  }
+
+  if (!event.body) {
+    return response(400, { message: 'Request body is required' })
+  }
+
+  try {
+    const payload = JSON.parse(event.body) as Partial<CreateUserProfileRequest>
+    const result = await createUserProfile(
+      {
+        email: payload.email ?? '',
+        displayName: payload.displayName ?? '',
+        avatarUrl: payload.avatarUrl,
+      },
+      userId,
+      repository,
+    )
+
+    if (!result.created) {
+      return response(200, {
+        user: {
+          id: result.profile.userId,
+          email: result.profile.email,
+          displayName: result.profile.displayName,
+          ...(result.profile.avatarUrl ? { avatarUrl: result.profile.avatarUrl } : {}),
+          createdAt: result.profile.createdAt,
+          updatedAt: result.profile.updatedAt,
+        },
+      })
+    }
+
+    return response(201, {
+      user: {
+        id: result.profile.userId,
+        email: result.profile.email,
+        displayName: result.profile.displayName,
+        ...(result.profile.avatarUrl ? { avatarUrl: result.profile.avatarUrl } : {}),
+        createdAt: result.profile.createdAt,
+        updatedAt: result.profile.updatedAt,
+      },
+    })
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes('required') || error.message.includes('invalid')) {
+        return response(400, { message: error.message })
+      }
+    }
+
+    return response(500, { message: 'Internal server error' })
+  }
+}
