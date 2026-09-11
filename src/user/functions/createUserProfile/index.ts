@@ -77,16 +77,7 @@ export const handler = async (
     )
 
     if (!result.created) {
-      return response(200, {
-        user: {
-          id: result.profile.userId,
-          email: result.profile.email,
-          displayName: result.profile.displayName,
-          ...(result.profile.avatarUrl ? { avatarUrl: result.profile.avatarUrl } : {}),
-          createdAt: result.profile.createdAt,
-          updatedAt: result.profile.updatedAt,
-        },
-      })
+      return response(409, { message: 'User profile already exists' })
     }
 
     return response(201, {
