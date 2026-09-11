@@ -37,9 +37,15 @@ const isAuthenticated = (event: UserProfileHandlerEvent): string | undefined => 
   return event.requestContext?.authorizer?.lambda?.subject?.trim() || undefined
 }
 
+const isUserProfileRepository = (
+  value: UserProfileRepository | undefined,
+): value is UserProfileRepository => {
+  return typeof value?.createIfNotExists === 'function'
+}
+
 export const handler = async (
   event: UserProfileHandlerEvent,
-  repository: UserProfileRepository = buildRepository(),
+  repositoryOrContext?: UserProfileRepository,
 ): Promise<HttpLambdaResponse> => {
   const userId = isAuthenticated(event)
 
@@ -50,6 +56,10 @@ export const handler = async (
   if (!event.body) {
     return response(400, { message: 'Request body is required' })
   }
+
+  const repository = isUserProfileRepository(repositoryOrContext)
+    ? repositoryOrContext
+    : buildRepository()
 
   try {
     const payload = JSON.parse(event.body) as Partial<CreateUserProfileRequest>
@@ -93,6 +103,7 @@ export const handler = async (
       }
     }
 
+    console.error('Failed to create user profile', error)
     return response(500, { message: 'Internal server error' })
   }
 }

@@ -1,4 +1,4 @@
-import type { UserSettings } from '../../../../../src/user/domain/models'
+import type { UserSettings } from '../../../../src/user/domain/models'
 
 describe('UserSettings', () => {
   test('represents a profile record in the user partition', () => {
