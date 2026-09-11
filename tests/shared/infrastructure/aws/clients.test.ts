@@ -14,7 +14,7 @@ describe('AWS clients', () => {
   test('configures DynamoDB with the local endpoint', async () => {
     const endpoint = await createDynamoDbClient(config).config.endpoint?.()
 
-    expect(endpoint).toMatchObject({ hostname: 'localhost', port: 8000 })
+    expect(endpoint).toMatchObject({ hostname: 'host.docker.internal', port: 8000 })
   })
 
   test('configures S3 with a path-style local endpoint', async () => {
@@ -22,7 +22,7 @@ describe('AWS clients', () => {
 
     const endpoint = await client.config.endpoint?.()
 
-    expect(endpoint).toMatchObject({ hostname: 'localhost', port: 4566 })
+    expect(endpoint).toMatchObject({ hostname: 'host.docker.internal', port: 4566 })
     expect(client.config.forcePathStyle).toBe(true)
   })
 })

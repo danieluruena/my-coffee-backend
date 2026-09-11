@@ -5,7 +5,12 @@ import type { EnvironmentConfig } from '../../config/environment'
 export const createDynamoDbClient = (config: EnvironmentConfig): DynamoDBClient => {
   return new DynamoDBClient({
     region: config.awsRegion,
-    ...(config.isLocalEnv ? { endpoint: 'http://localhost:8000' } : {}),
+    ...(config.isLocalEnv
+      ? {
+        endpoint: process.env.DYNAMODB_ENDPOINT || 'http://host.docker.internal:8000',
+        credentials: { accessKeyId: 'local', secretAccessKey: 'local' },
+      }
+      : {}),
   })
 }
 
@@ -14,8 +19,9 @@ export const createS3Client = (config: EnvironmentConfig): S3Client => {
     region: config.awsRegion,
     ...(config.isLocalEnv
       ? {
-        endpoint: 'http://localhost:4566',
+        endpoint: process.env.S3_ENDPOINT || 'http://host.docker.internal:4566',
         forcePathStyle: true,
+        credentials: { accessKeyId: 'local', secretAccessKey: 'local' },
       }
       : {}),
   })
