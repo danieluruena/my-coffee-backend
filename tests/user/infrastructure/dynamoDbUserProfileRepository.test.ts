@@ -4,7 +4,7 @@ import {
   PutCommand,
 } from '@aws-sdk/lib-dynamodb'
 import { DynamoDbUserProfileRepository } from '../../../src/user/infrastructure/dynamoDbUserProfileRepository'
-import type { UserSettings } from '../../../src/user/domain/models'
+import type { UserSettings } from '../../../src/user/application/createUserProfile'
 
 describe('DynamoDbUserProfileRepository', () => {
   const profile: UserSettings = {

@@ -1,5 +1,5 @@
 import { handler } from '../../../../src/user/functions/createUserProfile'
-import type { UserProfileRepository } from '../../../../src/user/application/interfaces'
+import type { UserProfileRepository } from '../../../../src/user/application/createUserProfile'
 
 describe('user profile handler', () => {
   const profileRepository: UserProfileRepository = {

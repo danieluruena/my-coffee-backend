@@ -4,10 +4,10 @@ import {
   PutCommand,
 } from '@aws-sdk/lib-dynamodb'
 import type {
+  UserSettings,
   UserProfileCreationResult,
   UserProfileRepository,
-} from '../application/interfaces'
-import type { UserSettings } from '../domain/models'
+} from '../application/createUserProfile'
 
 const PROFILE_SORT_KEY = 'SETTINGS#PROFILE' as const
 

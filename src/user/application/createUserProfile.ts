@@ -1,5 +1,29 @@
-import type { CreateUserProfileRequest, UserProfileRepository } from './interfaces'
-import type { UserSettings } from '../domain/models'
+export interface CreateUserProfileRequest {
+  email: string
+  displayName: string
+  avatarUrl?: string
+}
+
+export interface UserSettings {
+  pk: string
+  sk: 'SETTINGS#PROFILE'
+  userId: string
+  email: string
+  displayName: string
+  avatarUrl?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserProfileCreationResult {
+  created: boolean
+  profile: UserSettings
+}
+
+export interface UserProfileRepository {
+  findByUserId(userId: string): Promise<UserSettings | undefined>
+  createIfNotExists(profile: UserSettings): Promise<UserProfileCreationResult>
+}
 
 export interface CreateUserProfileResult {
   created: boolean

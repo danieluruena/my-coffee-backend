@@ -1,5 +1,5 @@
 import { createUserProfile } from '../../../src/user/application/createUserProfile'
-import type { UserProfileRepository } from '../../../src/user/application/interfaces'
+import type { UserProfileRepository } from '../../../src/user/application/createUserProfile'
 
 describe('createUserProfile', () => {
   const createdAt = '2026-09-09T03:00:00.000Z'

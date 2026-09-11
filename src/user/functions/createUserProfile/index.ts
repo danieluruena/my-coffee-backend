@@ -2,8 +2,11 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import { loadEnvironment } from '../../../shared/config/environment'
 import { createDynamoDbClient } from '../../../shared/infrastructure/aws/clients'
 import type { HttpLambdaResponse } from '../../../shared/interfaces'
-import { createUserProfile } from '../../application/createUserProfile'
-import type { CreateUserProfileRequest, UserProfileRepository } from '../../application/interfaces'
+import {
+  createUserProfile,
+  type CreateUserProfileRequest,
+  type UserProfileRepository,
+} from '../../application/createUserProfile'
 import { DynamoDbUserProfileRepository } from '../../infrastructure/dynamoDbUserProfileRepository'
 
 export interface UserProfileHandlerEvent {
